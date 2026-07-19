@@ -1,6 +1,6 @@
 // TwaTemplato service worker — offline app shell.
 // Bump CACHE version on any asset change to force clients to update.
-const CACHE = 'twatemplato-v59';
+const CACHE = 'twatemplato-v60';
 const ASSETS = [
   './',
   './index.html',
