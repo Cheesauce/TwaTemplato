@@ -317,6 +317,14 @@
                 <video id="field-camera-video" autoplay playsinline muted></video>
                 <canvas id="field-camera-canvas" style="display: none;"></canvas>
             </div>
+            <div class="field-camera-ratio" id="field-camera-ratio-row">
+                <span class="cam-ratio-label">Ratio</span>
+                <button class="cam-ratio-btn active" data-ratio="template" onclick="setCaptureRatio('template', this)" title="Fits the report photo frame">Fit&nbsp;Frame</button>
+                <button class="cam-ratio-btn" data-ratio="4:3" onclick="setCaptureRatio('4:3', this)">4:3</button>
+                <button class="cam-ratio-btn" data-ratio="1:1" onclick="setCaptureRatio('1:1', this)">1:1</button>
+                <button class="cam-ratio-btn" data-ratio="3:4" onclick="setCaptureRatio('3:4', this)">3:4</button>
+                <button class="cam-ratio-btn" data-ratio="full" onclick="setCaptureRatio('full', this)" title="Full camera frame, uncropped">Full</button>
+            </div>
             <div class="field-camera-actions" id="field-camera-live-actions">
                 <button class="action-btn cam-btn cam-primary" onclick="captureFieldPhoto()">&#128247; Capture</button>
                 <button class="action-btn cam-btn" onclick="swapCamera()" title="Switch front / back camera">&#128260; Flip</button>

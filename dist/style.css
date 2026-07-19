@@ -738,6 +738,27 @@ html, body {
         .cam-btn.cam-primary { background: #0ea5e9; color: #fff; border-color: #0284c7; }
         .cam-btn.cam-primary:hover { background: #0284c7; }
 
+        .field-camera-ratio {
+            display: flex; align-items: center; justify-content: center;
+            flex-wrap: wrap; gap: 6px;
+            padding: 8px 14px 0;
+        }
+        .cam-ratio-label {
+            color: #94a3b8; font-size: 12px; font-weight: 600;
+            letter-spacing: 0.5px; text-transform: uppercase; margin-right: 4px;
+        }
+        .cam-ratio-btn {
+            background: rgba(255,255,255,0.08); color: #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 999px; padding: 6px 12px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: background 0.12s ease, border-color 0.12s ease;
+        }
+        .cam-ratio-btn:hover { background: rgba(255,255,255,0.16); }
+        .cam-ratio-btn.active {
+            background: #0ea5e9; color: #fff; border-color: #0284c7;
+        }
+
         /* --- PHOTO ANNOTATION EDITOR --- */
         #photo-editor-modal { display: none; }
         .pe-bar {
