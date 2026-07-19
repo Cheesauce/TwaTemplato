@@ -722,15 +722,28 @@ html, body {
             min-height: 220px;
             position: relative;
         }
-        /* Live crop guide: dims the area outside the selected ratio and outlines
-           exactly what the photo will capture. */
-        #cam-crop-mask {
-            position: absolute; pointer-events: none; display: none;
-            box-shadow: 0 0 0 9999px rgba(15,23,42,0.55);
-            border: 2px solid rgba(255,255,255,0.92);
-            border-radius: 2px;
+        /* The video window IS the selected ratio: JS sizes this box to the
+           picked aspect and the video live-crops into it via object-fit:
+           cover -- true WYSIWYG with no overlay rendering cost. */
+        #cam-video-box {
+            position: relative;
+            overflow: hidden;
+            flex: none;
+            min-width: 0;
+            min-height: 0;
+            transition: width 0.18s ease, height 0.18s ease;
         }
-        #field-camera-video, #field-camera-canvas {
+        /* Absolutely positioned so the video's intrinsic size can never feed
+           back into the box's layout (flex min-size:auto made the box ignore
+           its explicit dimensions). */
+        #field-camera-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #field-camera-canvas {
             width: 100%;
             max-height: 70vh;
             object-fit: contain;
