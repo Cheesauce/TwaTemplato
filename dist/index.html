@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TwaTemplato - Engineering Drawing Editor</title>
+
+    <!-- Installable PWA (Add to Home Screen runs full-screen, no browser bars) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TwaTemplato">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.12.0/html2pdf.bundle.min.js"></script>
+        <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="menu-bar">
+        <div class="menu-left">
+            <div class="brand-logo" onclick="window.location.reload()" title="Reload TwaTemplato" style="cursor: pointer;">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10v12H2L22 10z"/>
+                </svg>
+                <span>TwaTemplato</span>
+            </div>
+
+            <div class="menu-group" style="margin-right: 15px; border-right: 1px solid #cbd5e1; padding-right: 15px;">
+                <div class="icon-btn disabled" id="undo-btn" onclick="undo()" title="Undo (Ctrl+Z)">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                </div>
+                <div class="icon-btn disabled" id="redo-btn" onclick="redo()" title="Redo (Ctrl+Y)">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <div class="menu-item" id="menu-file">
+                    File
+                    <div class="dropdown-menu">
+                        <div class="dropdown-option" onclick="exportProjectJSON()">
+                            Save Project File (.edproj) <span class="shortcut">Ctrl+S</span>
+                        </div>
+                        <div class="dropdown-option" onclick="document.getElementById('project-loader-input').click()">
+                            Open Project File (.edproj) <span class="shortcut">Ctrl+O</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="startNewProject()">
+                            New Project
+                        </div>
+                        <div class="dropdown-option" onclick="clearDiagramObjects()">
+                            Clear Sheet Objects
+                        </div>
+                        <div class="dropdown-option" onclick="clearAllData()">
+                            Reset Workspace <span class="shortcut">Ctrl+R</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="exportToPDF()">
+                            Export to PDF Document <span class="shortcut">Ctrl+P</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="startTour()">&#9654; Interactive Tutorial</div>
+                        <div class="dropdown-option" onclick="showQuickTips()">Quick Tips</div>
+                        <div class="dropdown-option" onclick="showFeedbackModal()">&#9993; Feedback / Message Author</div>
+                    </div>
+                </div>
+                
+                <div class="menu-item" id="menu-presets">
+                    Presets
+                    <div class="dropdown-menu">
+                        <div class="dropdown-option" onclick="loadPreset('structured')">Structured Cabling Template</div>
+                        <div class="dropdown-option" onclick="loadPreset('cctv')">CCTV Surveillance Layout</div>
+                        <div class="dropdown-option" onclick="loadPreset('acs')">Access Control System (ACS)</div>
+                        <div class="dropdown-option" onclick="loadPreset('fdas')">FDAS Fire Alarm Layout</div>
+                        <div class="dropdown-option" onclick="loadPreset('pa')">Public Address System (PA/BGM)</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="loadPreset('network')">Network Infrastructure Layout</div>
+                        <div class="dropdown-option" onclick="loadPreset('network_cctv')">Network & CCTV Integration</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="loadPreset('electrical')">Electrical Power Distribution</div>
+                        <div class="dropdown-option" onclick="loadPreset('hvac')">HVAC / Mechanical Layout</div>
+                        <div class="dropdown-option" onclick="loadPreset('plumbing')">Plumbing & Sanitary Plan</div>
+                    </div>
+                </div>
+
+                <div class="menu-item" id="menu-view">
+                    View
+                    <div class="dropdown-menu">
+                        <div class="dropdown-option" onclick="zoom(0.1)">Zoom In <span class="shortcut">Ctrl++</span></div>
+                        <div class="dropdown-option" onclick="zoom(-0.1)">Zoom Out <span class="shortcut">Ctrl+-</span></div>
+                        <div class="dropdown-option" onclick="resetZoom()">Fit to Screen <span class="shortcut">Ctrl+0</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="toggleFullscreen()">Toggle Fullscreen <span class="shortcut">F11</span></div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="toggleNetworkPalette(true)">Show Tools Palette (Objects)</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="toggleGrid()">Toggle Alignment Grid <span class="shortcut">G</span></div>
+                        <div class="dropdown-option" onclick="toggleLeftBlock()">Show / Hide Details Box</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="setCanvasTheme('light')">Light Theme (Standard)</div>
+                        <div class="dropdown-option" onclick="setCanvasTheme('dark')">CAD Dark Slate Theme</div>
+                        <div class="dropdown-option" onclick="setCanvasTheme('blueprint')">Technical Blueprint Theme</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-option" onclick="resetFloaters()">Reset Diagram/Sig Locations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-burger" id="nav-burger" onclick="toggleMobileMenu()" title="Menu">
+            <svg class="burger-open" viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg class="burger-close" viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+
+        <div class="workspace-switcher">
+            <div class="workspace-tab active" id="tab-drawing" onclick="switchWorkspace('drawing')">Schematic Drawing</div>
+            <div class="workspace-tab" id="tab-report" onclick="switchWorkspace('report')">Field Report</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="controls-info">
+            <span id="control-tip-1">Click any text to customize details.</span>
+            <span>Paste (Ctrl+V) images directly.</span>
+            <div class="paper-controls" id="paper-controls-wrapper">
+                <label for="paper-size-select">Layout Size:</label>
+                <select id="paper-size-select" onchange="changePaperSize()">
+                    <option value="a4" selected>A4 Landscape (1122 x 793)</option>
+                    <option value="a3">A3 Landscape (1587 x 1123)</option>
+                    <option value="letter">Letter Landscape (1056 x 816)</option>
+                </select>
+                <button class="clear-sheet-btn" onclick="clearDiagramObjects()" title="Remove all objects from this sheet, keeping title block text">Clear Sheet Objects</button>
+                <button class="mobile-tools-btn" id="mobile-tools-btn" onclick="toggleNetworkPalette()" title="Show/hide the objects palette">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Tools
+                </button>
+            </div>
+        </div>
+        <button class="export-btn" onclick="exportToPDF()">Export PDF Sheet</button>
+    </div>
+
+    <!-- Focus mode: hide the top bars to maximize canvas (mobile-friendly) -->
+    <div id="focus-toggle" onclick="toggleFocusMode()" title="Hide/show toolbars (focus mode)">
+        <svg class="focus-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+        <svg class="focus-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v6M15 20H9v-6M15 10l6-6M9 14l-6 6"/></svg>
+    </div>
+
+    <!-- NETWORK TOOL PALETTE -->
+    <div id="network-palette" class="network-palette">
+        <div class="palette-collapse-btn" onclick="togglePaletteCollapse()" title="Collapse / expand toolbox">TOOLS &#9664;</div>
+        <div class="net-tool" onclick="addNetworkNode('router')" title="Add Router">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 6v4m0 0l-2-2m2 2l2-2M12 18v-4m0 0l-2 2m2-2l2 2M6 12h4m0 0l-2-2m2 2l-2 2M18 12h-4m0 0l2-2m-2 2l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('switch')" title="Add Switch">
+            <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 10h12m0 0l-2-2m2 2l-2 2M18 14H6m0 0l2-2m-2 2l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('firewall')" title="Add Firewall">
+            <svg viewBox="0 0 24 24"><path d="M3 4h18v16H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 8h18M3 12h18M3 16h18M8 4v4M16 4v4M12 8v4M6 12v4M18 12v4M10 16v4" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('server')" title="Add Server">
+            <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 8h16M4 16h16M8 5h.01M8 12h.01M8 19h.01M12 5h4M12 12h4M12 19h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('ap')" title="Add Access Point">
+            <svg viewBox="0 0 24 24"><path d="M12 18h.01M8.5 14.5a5 5 0 017 0M6 12a8.5 8.5 0 0112 0M3.5 9.5a12 12 0 0117 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('pc')" title="Add Workstation">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('cloud')" title="Add Cloud">
+            <svg viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 116.71-9h1.79a4.5 4.5 0 110 9z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('leo')" title="Add LEO Kit (Starlink Globe)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+
+        <!-- NEW CCTV INTEGRATION ICONS -->
+        <hr style="width: 80%; border: 0; border-top: 1px solid #cbd5e1; margin: 4px 0;">
+        <div class="net-tool" onclick="addNetworkNode('camera')" title="Add Bullet IP Camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8v8"/><path d="M4 12h4l3-3h7a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-7l-3-3H4"/><circle cx="16" cy="12" r="2"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('dome')" title="Add Dome IP Camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0z"/><path d="M3 13h18"/><circle cx="12" cy="10" r="2"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('ptz')" title="Add PTZ IP Camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="3" rx="1"/><circle cx="12" cy="14" r="6"/><circle cx="12" cy="14" r="2"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('encoder')" title="Add Video Encoder / Decoder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 11h.01M10 11h.01M14 11h4"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('nvr')" title="Add NVR/Storage">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="20" height="8" rx="2"/><circle cx="17" cy="12" r="1.5"/><path d="M6 12h4"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('nas')" title="Add NAS (Network Storage)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 6v12M14 6v12"/><circle cx="10" cy="8" r="0.6" fill="currentColor"/><circle cx="14" cy="8" r="0.6" fill="currentColor"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('monitor')" title="Add Monitor Display">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+        </div>
+
+        <!-- POWER & GROUNDING (Starlink deployment) -->
+        <hr style="width: 80%; border: 0; border-top: 1px solid #cbd5e1; margin: 4px 0;">
+        <div class="net-tool" onclick="addNetworkNode('utility')" title="Add 220Vac Utility Power">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12c1.5-3.5 3-3.5 4.5 0s3 3.5 4.5 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('breaker')" title="Add Safety Breaker Panel (SPD + Breaker)">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 6l-2.5 4h2l-1.5 4 4-5h-2z" fill="currentColor"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('avr')" title="Add AVR / UPS">
+            <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9c1.2-2.4 2.6-2.4 4 0s2.8 2.4 4 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="15" r="1" fill="currentColor"/><circle cx="13" cy="15" r="1" fill="currentColor"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('pdu')" title="Add PDU / Power Strip">
+            <svg viewBox="0 0 24 24"><rect x="2" y="8" width="17" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="12" r="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="13" cy="12" r="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M19 12h3" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('ground')" title="Add Grounding Electrode / Ground Rod">
+            <svg viewBox="0 0 24 24"><path d="M12 3v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 11h14M7 15h10M9 19h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="net-tool" onclick="spawnCabinetZone('6u')" title="Add 6U Wall-Mount Cabinet Zone (place equipment inside)">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3,2"/><rect x="7" y="9" width="10" height="2.5" fill="currentColor"/><rect x="7" y="13" width="10" height="2.5" fill="currentColor"/></svg>
+        </div>
+        <div class="net-tool" onclick="spawnCabinetZone('42u')" title="Add 42U Data Rack Zone (floor-standing, place equipment inside)">
+            <svg viewBox="0 0 24 24"><rect x="6" y="1" width="12" height="21" rx="1" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3,2"/><rect x="9" y="4" width="6" height="2" fill="currentColor"/><rect x="9" y="8" width="6" height="2" fill="currentColor"/><rect x="9" y="12" width="6" height="2" fill="currentColor"/><rect x="9" y="16" width="6" height="2" fill="currentColor"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('fan')" title="Add Auxiliary Fan">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 12c-.8-3.5-2.5-5-5-5 1.2-2.3 4.6-2.3 5.8 0M12 12c3.5-.8 5-2.5 5-5 2.3 1.2 2.3 4.6 0 5.8M12 12c.8 3.5 2.5 5 5 5-1.2 2.3-4.6 2.3-5.8 0M12 12c-3.5.8-5 2.5-5 5-2.3-1.2-2.3-4.6 0-5.8" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        </div>
+
+        <hr style="width: 80%; border: 0; border-top: 1px solid #cbd5e1; margin: 4px 0;">
+        <div class="net-tool" onclick="spawnNotesPanel(420, 200, 'NOTES', ['Type your notes here&#8230;']); saveState();" title="Add Notes / Text Container Box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>
+        </div>
+        <div class="net-tool" onclick="addNetworkNode('text')" title="Add Text Label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+        </div>
+        <div class="net-tool" id="add-custom-icon-btn" onclick="document.getElementById('custom-node-upload').click()" title="Add your own icon to the library (PNG, JPG, SVG, HEIC)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+        </div>
+        <div class="net-tool" id="attach-image-btn" onclick="document.getElementById('attach-image-input').click()" title="Attach an image to the sheet (PNG, JPG, SVG, HEIC)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="M21 16l-5-5L5 20"/></svg>
+        </div>
+        <input type="file" id="custom-node-upload" accept="image/*,.svg,image/svg+xml,.heic,.heif" style="display: none;" onchange="handleCustomNodeUpload(event)">
+        <input type="file" id="attach-image-input" accept="image/*,.svg,image/svg+xml,.heic,.heif" style="display: none;" onchange="handleAttachImage(event)">
+        
+        <hr style="width: 80%; border: 0; border-top: 1px solid #cbd5e1; margin: 4px 0;">
+        <div class="net-tool" id="btn-link-mode" onclick="toggleLinkMode()" title="Link Mode: Draw connections between nodes">
+            <svg viewBox="0 0 24 24" style="stroke-width:2.5;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <hr style="width: 80%; border: 0; border-top: 1px solid #cbd5e1; margin: 4px 0;">
+        <div class="palette-title">SIZE</div>
+        <div style="display:flex; gap: 4px;">
+            <div class="net-tool" style="height: 24px; font-weight: bold; font-size: 16px;" onclick="scaleTopology(-0.1)" title="Shrink Network Topology">-</div>
+            <div class="net-tool" style="height: 24px; font-weight: bold; font-size: 14px;" onclick="scaleTopology(0.1)" title="Enlarge Network Topology">+</div>
+        </div>
+        <hr style="width: 80%; border: 0; border-top: 1px solid #cbd5e1; margin: 4px 0;">
+        <div class="net-tool" onclick="toggleNetworkPalette(false)" title="Close Palette">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        </div>
+    </div>
+
+    <!-- CONNECTION STYLE MODAL -->
+    <div id="link-config-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #ffffff; padding: 20px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); width: 300px; text-align: center; border: 1px solid #cbd5e1;">
+            <h3 style="margin-top: 0; color: #1e293b; font-size: 15px; font-weight: 600;">Connection Style</h3>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                <button class="action-btn" onclick="updateLinkStyle('cat6')">Standard Cable (CAT6)</button>
+                <button class="action-btn" onclick="updateLinkStyle('fiber')" style="border-left: 4px solid #f59e0b;">Fiber Optic (Orange)</button>
+                <button class="action-btn" onclick="updateLinkStyle('wireless')" style="border-left: 4px dashed #94a3b8;">Wireless / Cloud</button>
+                <button class="action-btn" onclick="updateLinkStyle('power')" style="border-left: 4px solid #dc2626;">AC Power Line (Red)</button>
+                <button class="action-btn" onclick="updateLinkStyle('ground')" style="border-left: 4px solid #16a34a;">Grounding Conductor (Green)</button>
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <div style="font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 8px;">Custom Cable Color</div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span class="link-color-swatch" onclick="updateLinkColor('#1e293b')" style="background:#1e293b;" title="Dark Slate"></span>
+                    <span class="link-color-swatch" onclick="updateLinkColor('#dc2626')" style="background:#dc2626;" title="Red"></span>
+                    <span class="link-color-swatch" onclick="updateLinkColor('#16a34a')" style="background:#16a34a;" title="Green"></span>
+                    <span class="link-color-swatch" onclick="updateLinkColor('#f59e0b')" style="background:#f59e0b;" title="Orange"></span>
+                    <span class="link-color-swatch" onclick="updateLinkColor('#2563eb')" style="background:#2563eb;" title="Blue"></span>
+                    <span class="link-color-swatch" onclick="updateLinkColor('#0ea5e9')" style="background:#0ea5e9;" title="Sky"></span>
+                    <span class="link-color-swatch" onclick="updateLinkColor('#7c3aed')" style="background:#7c3aed;" title="Violet"></span>
+                    <span class="link-color-swatch" onclick="updateLinkColor('#64748b')" style="background:#64748b;" title="Gray"></span>
+                    <input type="color" id="link-color-input" value="#1e293b" title="Pick any color" style="width: 28px; height: 24px; padding: 0; border: 1px solid #cbd5e1; border-radius: 2px; cursor: pointer; background: #fff;">
+                    <button class="action-btn" style="padding: 4px 8px; font-size: 11px;" onclick="updateLinkColor(document.getElementById('link-color-input').value)">Apply</button>
+                </div>
+            </div>
+            <div style="margin-bottom: 16px; text-align: left;">
+                <div style="font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 8px;">My Cable Types</div>
+                <div id="custom-cable-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;"></div>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <input type="text" id="custom-cable-name" placeholder="Cable name (e.g. HDMI)" style="flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 2px; font-size: 12px; font-family: inherit;">
+                    <label style="font-size: 11px; color: #475569; display: flex; align-items: center; gap: 4px; white-space: nowrap;"><input type="checkbox" id="custom-cable-dashed">Dashed</label>
+                    <button class="action-btn" style="padding: 6px 10px; font-size: 11px;" onclick="saveCustomCable()">Save</button>
+                </div>
+                <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">New cable type uses the color picked above.</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <button class="action-btn" style="flex: 1;" onclick="document.getElementById('link-config-modal').style.display='none'">Cancel</button>
+                <button class="action-btn" style="flex: 1; color: #ef4444; border-color: #ef4444;" onclick="deleteActiveLink()">Remove Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIELD CAMERA CAPTURE MODAL -->
+    <div id="field-camera-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.92); z-index: 10000; align-items: center; justify-content: center;">
+        <div class="field-camera-panel">
+            <div class="field-camera-head">
+                <span>FIELD PHOTO CAPTURE</span>
+                <span id="field-camera-geo-status">Getting location&#8230;</span>
+            </div>
+            <div class="field-camera-stage">
+                <video id="field-camera-video" autoplay playsinline muted></video>
+                <canvas id="field-camera-canvas" style="display: none;"></canvas>
+            </div>
+            <div class="field-camera-actions" id="field-camera-live-actions">
+                <button class="action-btn cam-btn cam-primary" onclick="captureFieldPhoto()">&#128247; Capture</button>
+                <button class="action-btn cam-btn" onclick="swapCamera()" title="Switch front / back camera">&#128260; Flip</button>
+                <button class="action-btn cam-btn" onclick="closeFieldCamera()">Cancel</button>
+            </div>
+            <div class="field-camera-actions" id="field-camera-review-actions" style="display: none;">
+                <button class="action-btn cam-btn cam-primary" onclick="acceptFieldPhoto()">&#10003; Use Photo</button>
+                <button class="action-btn cam-btn" onclick="openGeoEditor()">&#9998; Edit Details</button>
+                <button class="action-btn cam-btn" onclick="annotateFieldPhoto()">&#9998; Annotate</button>
+                <button class="action-btn cam-btn" onclick="retakeFieldPhoto()">&#8634; Retake</button>
+                <button class="action-btn cam-btn" onclick="closeFieldCamera()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GEOTAG DETAILS EDITOR -->
+    <div id="geo-edit-modal" class="tw-modal" style="display:none; z-index:10060;">
+        <div class="tw-modal-card" style="max-width:460px;">
+            <h3>Edit Geotag Details</h3>
+            <p class="tw-modal-sub">Correct anything the GPS got wrong. Changes are re-stamped onto the photo.</p>
+            <label class="geo-field">
+                <span>Location / address</span>
+                <textarea id="geo-edit-address" class="tw-input" rows="2" placeholder="e.g. 23, 1608 De Castro Ave, Pasig, Metro Manila, Philippines"></textarea>
+            </label>
+            <div class="geo-row">
+                <label class="geo-field">
+                    <span>Latitude (&deg;)</span>
+                    <input id="geo-edit-lat" class="tw-input" type="text" inputmode="decimal" placeholder="14.58814813">
+                </label>
+                <label class="geo-field">
+                    <span>Longitude (&deg;)</span>
+                    <input id="geo-edit-lon" class="tw-input" type="text" inputmode="decimal" placeholder="121.09735287">
+                </label>
+            </div>
+            <div class="geo-row">
+                <label class="geo-field">
+                    <span>Altitude (meters)</span>
+                    <input id="geo-edit-alt" class="tw-input" type="text" inputmode="decimal" placeholder="9">
+                </label>
+                <label class="geo-field">
+                    <span>Date &amp; time</span>
+                    <input id="geo-edit-datetime" class="tw-input" type="datetime-local" step="1">
+                </label>
+            </div>
+            <div class="tw-modal-actions">
+                <button class="tw-btn-secondary" onclick="cancelGeoEditor()">Cancel</button>
+                <button class="tw-btn-primary" onclick="applyGeoEditor()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHOTO ANNOTATION EDITOR -->
+    <div id="photo-editor-modal" style="display: none; position: fixed; inset: 0; background: #0f172a; z-index: 10050; flex-direction: column;">
+        <div class="pe-bar pe-top">
+            <span class="pe-title">EDIT PHOTO</span>
+            <div class="pe-group">
+                <button class="pe-btn" onclick="peUndo()" title="Undo">&#8634;</button>
+                <button class="pe-btn" onclick="peRedo()" title="Redo">&#8635;</button>
+                <button class="pe-btn" onclick="peClosePhotoEditor()" title="Cancel">Cancel</button>
+                <button class="pe-btn pe-done" onclick="peDone()" title="Apply">&#10003; Done</button>
+            </div>
+        </div>
+        <div class="pe-stage" id="pe-stage">
+            <canvas id="pe-canvas"></canvas>
+        </div>
+        <div class="pe-bar pe-bottom">
+            <div class="pe-tools" id="pe-tools">
+                <button class="pe-tool" data-tool="select" title="Select / move / resize">&#9995;</button>
+                <button class="pe-tool active" data-tool="brush" title="Freehand brush">&#9998;</button>
+                <button class="pe-tool" data-tool="line" title="Line">&#9585;</button>
+                <button class="pe-tool" data-tool="arrow" title="Arrow">&#8599;</button>
+                <button class="pe-tool" data-tool="rect" title="Rectangle">&#9633;</button>
+                <button class="pe-tool" data-tool="circle" title="Circle / ellipse">&#9711;</button>
+                <button class="pe-tool" data-tool="text" title="Text">T</button>
+                <button class="pe-tool" data-tool="delete" title="Delete selected">&#128465;</button>
+            </div>
+            <div class="pe-colors" id="pe-colors"></div>
+            <div class="pe-width">
+                <span>Size</span>
+                <input type="range" id="pe-width" min="1" max="24" value="5">
+            </div>
+        </div>
+
+        <!-- Stable text-entry dialog (a floating input closed the mobile
+             keyboard mid-typing on viewport resize; a modal is immune). -->
+        <div id="pe-text-modal" class="tw-modal" style="display:none; z-index:10090;">
+            <div class="tw-modal-card" style="max-width:420px;">
+                <h3>Add Text</h3>
+                <input id="pe-text-modal-input" class="tw-input" type="text" autocomplete="off"
+                       placeholder="Type annotation text&#8230;"
+                       onkeydown="if(event.key==='Enter'){event.preventDefault();peConfirmTextModal();}">
+                <div class="tw-modal-actions">
+                    <button class="tw-btn-secondary" onclick="peCancelTextModal()">Cancel</button>
+                    <button class="tw-btn-primary" onclick="peConfirmTextModal()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UTILITY MODALS -->
+    <div id="custom-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #ffffff; padding: 25px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); width: 420px; text-align: center; border: 1px solid #cbd5e1;">
+            <h3 id="modal-title" style="margin-top: 0; color: #1e293b; font-size: 16px; font-weight: 600;">Confirm Reset Layout</h3>
+            <p id="modal-text" style="color: #475569; font-size: 13px; line-height: 1.5; margin-bottom: 25px;">Are you sure you want to reset all images and custom text values back to default configurations?</p>
+            <div style="display: flex; justify-content: center; gap: 12px;">
+                <button id="modal-confirm-btn" onclick="executeModalAction(true)" style="background: #1e293b; color: #ffffff; border: 1px solid #1e293b; padding: 8px 20px; border-radius: 2px; cursor: pointer; font-weight: 500; font-size: 13px;">Reset Workspace</button>
+                <button onclick="executeModalAction(false)" style="background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; padding: 8px 20px; border-radius: 2px; cursor: pointer; font-size: 13px; font-weight: 500;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback / Message-the-author modal -->
+    <div id="feedback-modal" class="tw-modal" style="display:none;">
+        <div class="tw-modal-card">
+            <h3>Send Feedback</h3>
+            <p class="tw-modal-sub">Rate the app and send a message to the author.</p>
+            <div class="fb-stars" id="fb-stars">
+                <span data-v="1">&#9733;</span><span data-v="2">&#9733;</span><span data-v="3">&#9733;</span><span data-v="4">&#9733;</span><span data-v="5">&#9733;</span>
+            </div>
+            <input type="text" id="fb-title" class="tw-input" placeholder="Subject / title" maxlength="120">
+            <textarea id="fb-message" class="tw-input" rows="4" placeholder="Your message, suggestion, or bug report…"></textarea>
+            <div class="fb-email-row">
+                Sends to <a href="#" id="fb-email-toggle" onclick="toggleFeedbackEmail(event)">dbsuelan@revlv.com</a>
+            </div>
+            <div class="tw-modal-actions">
+                <button class="tw-btn-secondary" onclick="closeFeedbackModal()">Cancel</button>
+                <button class="tw-btn-primary" onclick="sendFeedback()">Send Message</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- First-run quick tips -->
+    <div id="tips-modal" class="tw-modal" style="display:none;">
+        <div class="tw-modal-card tw-tips-card">
+            <h3>Welcome to TwaTemplato</h3>
+            <p class="tw-modal-sub">Quick tips to get productive fast:</p>
+            <ol class="tips-list">
+                <li><strong>Start from a preset</strong> — Presets &#9656; <em>Network Infrastructure</em> or <em>CCTV Surveillance</em> give you a complete, realistic starting diagram.</li>
+                <li><strong>Add equipment</strong> — open <em>Tools</em> and tap an object; drag it into place. Tap an object to select it (delete &#10005; and resize handles appear).</li>
+                <li><strong>Connect objects</strong> — drag from the blue dot on an object to another object. Tap a cable to change its color/type.</li>
+                <li><strong>Rename anything</strong> — tap any text (labels, title block) to edit it. Fonts auto-fit.</li>
+                <li><strong>Field Report</strong> — tap a photo frame to upload, or use the &#128247; camera button for a live geotagged capture. Annotate with shapes and text.</li>
+                <li><strong>Export</strong> — one tap on <em>Export PDF Sheet</em>. Editing helpers never appear in the PDF.</li>
+            </ol>
+            <div class="tw-modal-actions">
+                <button class="tw-btn-secondary" onclick="closeQuickTips()">Got it</button>
+                <button class="tw-btn-primary" onclick="closeQuickTips(); startTour();">&#9654; Show me around</button>
+            </div>
+            <p class="tips-reopen">Reopen anytime: File &#9656; Interactive Tutorial / Quick Tips</p>
+        </div>
+    </div>
+
+    <div id="custom-toast" style="display: none; position: fixed; bottom: 25px; right: 25px; background: #1e293b; color: #ffffff; padding: 12px 24px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999; font-size: 13px; font-weight: 500; align-items: center; gap: 15px; border: 1px solid #1e293b;">
+        <span id="toast-message">Workspace reset successfully.</span>
+        <span onclick="this.parentElement.style.display='none'" style="cursor: pointer; font-weight: bold; color: #94a3b8;">✕</span>
+    </div>
+
+    <!-- Hidden system input elements -->
+    <input type="file" id="project-loader-input" accept=".edproj" style="display: none;" onchange="importProjectJSON(event)">
+    <input type="file" id="diagram-upload" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'diagram-img')" multiple>
+    <input type="file" id="logo-upload" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'logo-img')">
+    <input type="file" id="signature-upload" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'signature-img')">
+    <input type="file" id="report-logo-upload" accept="image/*" style="display: none;" onchange="handleReportLogoUpload(event)">
+    <input type="file" id="dynamic-report-upload" accept="image/*" style="display: none;" onchange="handleDynamicUpload(event)">
+    <input type="file" id="signoff-sig-upload" accept="image/*" style="display: none;" onchange="handleSignoffSigUpload(event)">
+    <input type="file" id="node-photo-upload" accept="image/*" style="display: none;" onchange="handleNodePhotoUpload(event)">
+    <input type="file" id="native-camera-input" accept="image/*" capture="environment" style="display: none;" onchange="handleNativeCameraCapture(event)">
+
+    <div id="workspace-wrapper">
+        <!-- 📐 DRAWING WORKSPACE (MULTI-PAGE ENABLED) -->
+        <div id="drawing-pages-wrapper">
+            <div class="drawing-page" id="drawing-page-1">
+                <button class="delete-page-btn delete-btn" onclick="deleteDrawingPage('drawing-page-1')" style="display: none;">Remove Page</button>
+                <div class="signature-wrapper image-container" id="signature-wrapper-1">
+                    <img class="signature-img" id="signature-img-1" alt="Signature">
+                    <div class="delete-btn" onclick="deleteImage(event, 'signature-img-1', 'signature-hint-1', 'signature-wrapper-1')" title="Remove Signature">Remove</div>
+                </div>
+
+                <div class="drawing-frame">
+                    <div class="diagram-area grid-overlay">
+                        <span class="diagram-hint">
+                            <span class="diagram-hint-text">Paste, choose a Preset, add objects, or upload images</span>
+                            <button type="button" class="diagram-upload-btn" onclick="document.getElementById('attach-image-input').click()">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Upload Image
+                            </button>
+                        </span>
+                    </div>
+
+                    <!-- Left block floating inside -->
+                    <div class="left-block">
+                        <div class="left-block-drag-handle" title="Drag to move the details box">&#10495; MOVE</div>
+                        <div class="delete-btn" onclick="toggleLeftBlock(false)" title="Hide Details Box" style="top: 2px; right: 2px; z-index: 100;">Close</div>
+                        <table>
+                            <colgroup>
+                                <col style="width: 28%;">
+                                <col style="width: 22%;">
+                                <col style="width: 22%;">
+                                <col style="width: 28%;">
+                            </colgroup>
+                            <tr>
+                                <td colspan="4" class="block-title"><span id="doc-main-title" contenteditable="true" style="display: block; width: calc(100% - 4px);">STRUCTURED CABLING</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="4"><span class="label" contenteditable="true">COMPANY:</span> <span id="field-company" contenteditable="true">REVLV SOLUTIONS INC.</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="4"><span class="label" contenteditable="true">PROJECT:</span> <span id="field-project" contenteditable="true">INSTALLATION OF LOW EARTH ORBIT SATELLITE TO ONE AYALA TOWER, ING PHILIPPINES</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="width: 50%;"><span class="label" contenteditable="true">CLIENT:</span> <span id="field-client" contenteditable="true">ING PHILIPPINES</span></td>
+                                <td colspan="2"><span class="label" contenteditable="true">LOCATION:</span> <span id="field-location" contenteditable="true">ONE AYALA TOWER, MAKATI CITY</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="label" contenteditable="true">DATE:</span> <span id="field-date" contenteditable="true">JUNE 15, 2026</span></td>
+                                <td colspan="2"><span class="label" contenteditable="true">DRAWN BY:</span> <span id="field-drawn" contenteditable="true">DENNE JOSHUA SUELAN</span></td>
+                                <td><span class="label" contenteditable="true">CHECKED BY:</span> <span id="field-checked" contenteditable="true">CESAR P. MANRESA</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="label"><span id="field-cert-label" contenteditable="true">FOR ECE CERTIFICATION:</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><span class="label" contenteditable="true">PECE NAME:</span> <span id="field-pece" contenteditable="true">CESAR P. MANRESA</span></td>
+                                <td colspan="2"><span class="label" contenteditable="true">REG. NO.:</span> <span id="field-reg" contenteditable="true">0005060</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="signature-cell" id="sig-cell-1" onclick="document.getElementById('signature-upload').click()">
+                                    <div class="label" style="margin-bottom: 4px;" contenteditable="true" onclick="event.stopPropagation()">SIGNATURE:</div>
+                                    <span class="upload-hint" id="signature-hint-1" style="position: static; font-size: 9px; padding: 3px 8px; border-radius: 2px; background: #e2e8f0; color: #475569; opacity: 1; pointer-events: none; display: inline-block; margin-left: 5px;">Click or Paste to sign</span>
+                                </td>
+                                <td colspan="2"><span class="label" contenteditable="true">VALID UNTIL:</span> <span id="field-valid" contenteditable="true">12-22-2027</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Bottom Information Strip -->
+                    <div class="bottom-strip">
+                        <div class="logo-section image-container" id="logo-container-1" onclick="document.getElementById('logo-upload').click()">
+                            <span class="upload-hint" id="logo-hint-1">Click or Paste to upload Logo</span>
+                            <img class="logo-img" id="logo-img-1" alt="Logo">
+                            <div class="delete-btn" onclick="deleteImage(event, 'logo-img-1', 'logo-hint-1', 'logo-container-1')" title="Remove Logo">Remove</div>
+                        </div>
+                        
+                        <div class="bottom-table">
+                            <div class="bold" contenteditable="true">Company:</div>
+                            <div id="bfield-company" contenteditable="true">REVLV SOLUTIONS INC.</div>
+                            <div class="bold" contenteditable="true">Subject:</div>
+                            <div id="bfield-subject" contenteditable="true">STRUCTURED CABLING</div>
+                            <div class="bold" contenteditable="true">Author:</div>
+                            <div id="bfield-author" contenteditable="true">DENNE JOSHUA SUELAN</div>
+                            
+                            <div class="bold" contenteditable="true">Engineer:</div>
+                            <div id="bfield-engineer" contenteditable="true">DENNE JOSHUA SUELAN</div>
+                            <div class="bold" contenteditable="true">Scale:</div>
+                            <div id="bfield-scale" contenteditable="true">NTS</div>
+                            <div class="bold" contenteditable="true">Revision:</div>
+                            <div id="bfield-revision" contenteditable="true">00</div>
+                            
+                            <div class="bold" contenteditable="true" style="border-bottom: none;">Project:</div>
+                            <div id="bfield-project" contenteditable="true" style="border-bottom: none;">INSTALLATION OF LOW EARTH ORBIT SATELLITE TO WORLD PLAZA, ING PHILIPPINES</div>
+                            <div class="bold" contenteditable="true" style="border-bottom: none;">Drawing Name:</div>
+                            <div id="bfield-drawing" contenteditable="true" style="border-bottom: none;">STRUCTURED CABLING</div>
+                            <div class="bold" contenteditable="true" style="border-bottom: none;">Date:</div>
+                            <div id="bfield-date" contenteditable="true" style="border-bottom: none;">JUNE 15, 2026</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📝 REPORT WORKSPACE -->
+        <div id="report-pages-wrapper">
+            <div class="report-page" id="report-page-1">
+                <button class="delete-page-btn delete-btn" onclick="deleteReportPage('report-page-1')" style="display: none;">Remove Page</button>
+                <!-- Header -->
+                <div class="report-header">
+                    <div class="report-logo-box image-container" id="report-logo-container" onclick="openReportLogoPicker('report-logo-img')">
+                        <span class="upload-hint" id="report-logo-hint" style="font-size: 11px; margin-bottom: 8px;">Upload Logo</span>
+                        <img id="report-logo-img" alt="Company Logo">
+                        <div class="delete-btn" onclick="deleteImage(event, 'report-logo-img', 'report-logo-hint', 'report-logo-container')" title="Remove Logo">Remove</div>
+                    </div>
+                    <div class="report-corp-info">
+                        <span contenteditable="true">Unit 26N Burgundy Corporate Tower,</span>
+                        <span contenteditable="true">252 Senator Gil Puyat Avenue Makati City</span>
+                        <span contenteditable="true" class="contact-line"><strong>P:</strong> 02-5310-6069 &nbsp;&nbsp;<strong>M:</strong> 0906-445-8559 | 0995-131-9962</span>
+                        <span contenteditable="true" class="contact-line"><strong>E:</strong> sales@revlv.com &nbsp;&nbsp;<strong>W:</strong> www.revlv.com</span>
+                        <span contenteditable="true" class="contact-line"><strong>TIN:</strong> 008-745-077-000</span>
+                    </div>
+                </div>
+                
+                <div class="report-titles">
+                    <div>
+                        <div class="main-title"><span contenteditable="true" placeholder="ENTER PROJECT NAME"></span></div>
+                        <div><span contenteditable="true" placeholder="ENTER SECTION/LOCATION"></span></div>
+                    </div>
+                    <div style="font-weight: bold; font-size: 14px;"><span contenteditable="true" placeholder="DOCUMENTATION"></span></div>
+                </div>
+
+                <hr class="report-divider">
+
+                <!-- Dynamic Photo Grid -->
+                <div class="report-grid">
+                    <div class="report-slot image-container" onclick="triggerDynamicUpload(event, this)">
+                        <span class="upload-hint">Click or Paste Photo</span>
+                        <div class="report-img-wrapper">
+                            <div class="resize-handle nw" data-corner="nw"></div>
+                            <div class="resize-handle ne" data-corner="ne"></div>
+                            <div class="resize-handle sw" data-corner="sw"></div>
+                            <div class="resize-handle se" data-corner="se"></div>
+                            <img class="report-img" alt="Photo">
+                        </div>
+                        <div class="delete-btn" onclick="deleteDynamicImage(event, this)" title="Remove Photo">Remove</div>
+                        <div class="delete-frame-btn" onclick="deleteFrame(event, this)" title="Delete Frame">Remove Frame</div>
+                        <div class="report-caption-box"><span contenteditable="true" onclick="event.stopPropagation()">ENTER CAPTION OR DESCRIPTION HERE</span></div>
+                    </div>
+                    
+                    <div class="report-slot image-container" onclick="triggerDynamicUpload(event, this)">
+                        <span class="upload-hint">Click or Paste Photo</span>
+                        <div class="report-img-wrapper">
+                            <div class="resize-handle nw" data-corner="nw"></div>
+                            <div class="resize-handle ne" data-corner="ne"></div>
+                            <div class="resize-handle sw" data-corner="sw"></div>
+                            <div class="resize-handle se" data-corner="se"></div>
+                            <img class="report-img" alt="Photo">
+                        </div>
+                        <div class="delete-btn" onclick="deleteDynamicImage(event, this)" title="Remove Photo">Remove</div>
+                        <div class="delete-frame-btn" onclick="deleteFrame(event, this)" title="Delete Frame">Remove Frame</div>
+                        <div class="report-caption-box"><span contenteditable="true" onclick="event.stopPropagation()">ENTER CAPTION OR DESCRIPTION HERE</span></div>
+                    </div>
+
+                    <div class="report-slot image-container" onclick="triggerDynamicUpload(event, this)">
+                        <span class="upload-hint">Click or Paste Photo</span>
+                        <div class="report-img-wrapper">
+                            <div class="resize-handle nw" data-corner="nw"></div>
+                            <div class="resize-handle ne" data-corner="ne"></div>
+                            <div class="resize-handle sw" data-corner="sw"></div>
+                            <div class="resize-handle se" data-corner="se"></div>
+                            <img class="report-img" alt="Photo">
+                        </div>
+                        <div class="delete-btn" onclick="deleteDynamicImage(event, this)" title="Remove Photo">Remove</div>
+                        <div class="delete-frame-btn" onclick="deleteFrame(event, this)" title="Delete Frame">Remove Frame</div>
+                        <div class="report-caption-box"><span contenteditable="true" onclick="event.stopPropagation()">ELECTRICAL RM.<br>(ELECTRICAL SOURCE AND ROUTER)</span></div>
+                    </div>
+
+                    <div class="report-slot image-container" onclick="triggerDynamicUpload(event, this)">
+                        <span class="upload-hint">Click or Paste Photo</span>
+                        <div class="report-img-wrapper">
+                            <div class="resize-handle nw" data-corner="nw"></div>
+                            <div class="resize-handle ne" data-corner="ne"></div>
+                            <div class="resize-handle sw" data-corner="sw"></div>
+                            <div class="resize-handle se" data-corner="se"></div>
+                            <img class="report-img" alt="Photo">
+                        </div>
+                        <div class="delete-btn" onclick="deleteDynamicImage(event, this)" title="Remove Photo">Remove</div>
+                        <div class="delete-frame-btn" onclick="deleteFrame(event, this)" title="Delete Frame">Remove Frame</div>
+                        <div class="report-caption-box"><span contenteditable="true" onclick="event.stopPropagation()">AC PIPING RM.</span></div>
+                    </div>
+
+                    <!-- Spawner Button -->
+                    <div class="add-slot-btn" onclick="addSlot(this)" style="display: none;">Add Photo Frame</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Page spawners live OUTSIDE the scaled sheet wrappers so their
+             buttons stay full-size (touch-friendly) on mobile. -->
+        <div class="page-actions-container" id="drawing-actions-container">
+            <button class="action-btn" onclick="addDrawingPage()">Add Drawing Page</button>
+        </div>
+        <div class="page-actions-container" id="report-actions-container" style="display: none;">
+            <button class="action-btn" onclick="addReportPage()">Add Photo Page</button>
+            <button class="action-btn" onclick="addSignoffPage()">Add Sign-off Page</button>
+        </div>
+    </div>
+
+        <script src="script.js"></script>
+</body>
+</html>
