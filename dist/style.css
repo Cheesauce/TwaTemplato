@@ -1372,6 +1372,105 @@ html, body {
 
         .exporting .notes-drag-bar { display: none !important; }
 
+        /* AUTO LEGEND -- same container family as the Notes panel (border,
+           background, shadow) so it reads as the same class of object. Content
+           is code-generated and read-only. Box auto-sizes to its rows. */
+        .network-node.legend-node {
+            width: auto;
+            min-width: 160px;
+            max-width: 280px;
+            align-items: stretch;
+            background: #ffffff;
+            border: 1px solid #1e293b;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18);
+            padding: 8px 10px 10px;
+            box-sizing: border-box;
+        }
+
+        .legend-node .legend-drag-bar {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            display: none;
+            background: #1e293b;
+            color: #ffffff;
+            font-size: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            cursor: move;
+            user-select: none;
+            z-index: 20;
+        }
+        .legend-node:hover .legend-drag-bar { display: block; }
+
+        .legend-node .legend-content {
+            font-size: 9px;
+            color: #1e293b;
+            text-align: left;
+        }
+
+        .legend-node .legend-group + .legend-group { margin-top: 8px; }
+
+        .legend-node .legend-group-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: #1e293b;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 3px;
+            margin-bottom: 5px;
+        }
+
+        .legend-node .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 3px;
+            white-space: nowrap;
+        }
+        .legend-node .legend-row:last-child { margin-bottom: 0; }
+
+        .legend-node .legend-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            flex: 0 0 22px;
+        }
+        .legend-node .legend-icon svg { width: 22px !important; height: 22px !important; }
+        .legend-node .legend-icon .legend-swatch { width: 30px !important; height: 12px !important; }
+
+        .legend-node .legend-count {
+            font-weight: 700;
+            min-width: 22px;
+            text-align: right;
+            flex: 0 0 auto;
+        }
+
+        .legend-node .legend-label { flex: 1 1 auto; }
+
+        .legend-node .legend-empty {
+            font-size: 9px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .network-node.selected.legend-node {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        @keyframes legendFlash {
+            0%, 100% { box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18); }
+            30%, 70% { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.55); }
+        }
+        .legend-node.legend-flash { animation: legendFlash 1.2s ease; }
+
+        .exporting .legend-drag-bar { display: none !important; }
+
         /* Cabinet boundary zones (EIA-310 dashed boxes). The body ignores
            pointer events so equipment inside stays fully interactive; the
            light blue tint marks the area as a cabinet at a glance. */
@@ -1416,6 +1515,26 @@ html, body {
             cursor: move;
             white-space: nowrap;
             z-index: 20;
+        }
+
+        /* Two connection ports, vertically centered on the dashed body's left
+           and right edges (like the corner resize-handle dots, but mid-edge).
+           The zone body sets pointer-events:none, so re-enable it here. Always
+           shown (not hover-only) so the anchors are discoverable. Centered with
+           a negative margin rather than a transform so getNodeCenter's
+           offsetLeft/offsetTop walk resolves the true dot center. Reuses the
+           shared .node-port dot styling; only repositions it. */
+        .cabinet-zone > .node-port {
+            pointer-events: auto;
+            display: block;
+            top: 50%;
+            margin-top: -8px;
+        }
+        .cabinet-zone > .node-port.port-left  { left: -8px;  right: auto; }
+        .cabinet-zone > .node-port.port-right { right: -8px; left: auto; }
+        body.is-mobile .cabinet-zone > .node-port {
+            top: 50%;
+            margin-top: -11px;
         }
 
         .cabzone-bar .cabzone-label { cursor: text; }
